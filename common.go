@@ -11,6 +11,7 @@ import (
 )
 
 var (
+	icon    []byte
 	current []byte
 	clock   []byte
 	hour    []byte
@@ -24,6 +25,7 @@ func init() {
 		return data
 	}
 
+	icon = base64ToByteArray(Icon)
 	current = base64ToByteArray(CurrentBase64)
 	clock = base64ToByteArray(Clock)
 	hour = base64ToByteArray(HourBase64)
