@@ -1,13 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"github.com/getlantern/systray"
 	"github.com/skratchdot/open-golang/open"
-	"os"
 	"strconv"
 	"strings"
 	"time"
+	"os"
 )
 
 func say(h int, m int) {
@@ -37,10 +36,10 @@ func onReady() {
 	systray.SetIcon(icon)
 	systray.SetTooltip("Time Alert")
 
-	autoStart := false // 开启自动启动
 	go func() {
 		autoStartMenu := systray.AddMenuItem("开机自动启动", "Auto Start")
-		if autoStart {
+		// 如果快捷方式文件存在，则开启开机自动启动
+		if _, err := os.Stat(link); !os.IsNotExist(err) {
 			autoStartMenu.Check()
 		}
 		aboutMenu := systray.AddMenuItem("关于", "About")
@@ -52,8 +51,10 @@ func onReady() {
 			case <-autoStartMenu.ClickedCh:
 				if autoStartMenu.Checked() {
 					autoStartMenu.Uncheck()
+					removeShortcut()
 				} else {
 					autoStartMenu.Check()
+					makeShortcut()
 				}
 			case <-aboutMenu.ClickedCh:
 				open.Run("https://github.com/RitterHou/time-alert")
@@ -66,9 +67,6 @@ func onReady() {
 }
 
 func main() {
-	file := os.Args[0]
-	fmt.Println(file)
-
 	conf := getConf()
 	alertTimePoint := 30
 	if val, ok := conf["alert_time_point"]; ok {
