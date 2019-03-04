@@ -84,7 +84,7 @@ func main() {
 
 	go func() {
 		ticker := time.NewTicker(1 * time.Second)
-		currentMinute := -1
+		currentMinute := time.Now().Minute()
 		for t := range ticker.C {
 			h := t.Hour()
 			m := t.Minute()
