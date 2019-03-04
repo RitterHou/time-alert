@@ -3,11 +3,16 @@ package main
 import (
 	"github.com/getlantern/systray"
 	"github.com/skratchdot/open-golang/open"
+	"log"
+	"os"
 	"strconv"
 	"strings"
 	"time"
-	"os"
 )
+
+func init() {
+	initLog() // 初始化日志设置
+}
 
 func say(h int, m int) {
 	go func() {
@@ -67,15 +72,23 @@ func onReady() {
 }
 
 func main() {
+	var err error
 	conf := getConf()
+
 	alertTimePoint := 30
 	if val, ok := conf["alert_time_point"]; ok {
-		alertTimePoint, _ = strconv.Atoi(val)
+		alertTimePoint, err = strconv.Atoi(val)
+		if err != nil {
+			log.Fatalln(err)
+		}
 	}
 	disabledHours := make([]int, 0)
 	if val, ok := conf["disabled_hours"]; ok {
 		for _, v := range strings.Split(val, ",") {
-			disabledHour, _ := strconv.Atoi(v)
+			disabledHour, err := strconv.Atoi(v)
+			if err != nil {
+				log.Fatalln(err)
+			}
 			disabledHours = append(disabledHours, disabledHour)
 		}
 	}

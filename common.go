@@ -6,14 +6,14 @@ import (
 	"github.com/faiface/beep"
 	"github.com/faiface/beep/speaker"
 	"github.com/faiface/beep/wav"
-	"io/ioutil"
-	"time"
 	"github.com/go-ole/go-ole"
 	"github.com/go-ole/go-ole/oleutil"
-	"os/user"
+	"io/ioutil"
 	"log"
-	"path"
 	"os"
+	"os/user"
+	"path"
+	"time"
 )
 
 var (
@@ -30,7 +30,10 @@ var (
 
 func init() {
 	var base64ToByteArray = func(value string) []byte {
-		data, _ := base64.StdEncoding.DecodeString(value)
+		data, err := base64.StdEncoding.DecodeString(value)
+		if err != nil {
+			log.Fatalln(err)
+		}
 		return data
 	}
 
@@ -79,7 +82,10 @@ func format(num int) [][]byte {
 
 // 播放声音
 func play(data []byte) {
-	s, format, _ := wav.Decode(ioutil.NopCloser(bytes.NewReader(data)))
+	s, format, err := wav.Decode(ioutil.NopCloser(bytes.NewReader(data)))
+	if err != nil {
+		log.Fatalln(err)
+	}
 
 	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
 	playing := make(chan struct{})
@@ -123,9 +129,22 @@ func createShortcut(source string, target string) error {
 }
 
 func makeShortcut() {
-	createShortcut(app, link)
+	err := createShortcut(app, link)
+	if err != nil {
+		log.Fatalln(err)
+	}
 }
 
 func removeShortcut() {
-	os.Remove(link)
+	err := os.Remove(link)
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
+
+// 设置log的相关属性
+func initLog() {
+	logFile, _ := os.OpenFile(path.Join(root, "TimeAlert.log"), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	log.SetOutput(logFile)
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
 }

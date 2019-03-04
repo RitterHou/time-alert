@@ -2,6 +2,7 @@ package main
 
 import (
 	"io/ioutil"
+	"log"
 	"os"
 	"path"
 	"regexp"
@@ -23,7 +24,10 @@ alert_time_point=30
 )
 
 func init() {
-	root, _ = os.Getwd()
+	root, err := os.Getwd()
+	if err != nil {
+		log.Fatalln(err)
+	}
 	confFile := path.Join(root, fileName)
 	if _, err := os.Stat(confFile); os.IsNotExist(err) {
 		writeFile(confFile, content)
@@ -46,10 +50,16 @@ func getConf() map[string]string {
 }
 
 func readFile(filePath string) string {
-	data, _ := ioutil.ReadFile(filePath)
+	data, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		log.Fatalln(err)
+	}
 	return string(data)
 }
 
 func writeFile(filePath string, data string) {
-	ioutil.WriteFile(filePath, []byte(data), 0644)
+	err := ioutil.WriteFile(filePath, []byte(data), 0644)
+	if err != nil {
+		log.Fatalln(err)
+	}
 }
