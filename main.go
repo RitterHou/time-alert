@@ -10,8 +10,33 @@ import (
 	"time"
 )
 
+var (
+	alertTimePoint int
+	disabledHours  []int
+)
+
 func init() {
 	initLog() // 初始化日志设置
+
+	var err error
+	conf := getConf()
+	alertTimePoint = 30
+	if val, ok := conf["alert_time_point"]; ok {
+		alertTimePoint, err = strconv.Atoi(val)
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}
+	disabledHours = make([]int, 0)
+	if val, ok := conf["disabled_hours"]; ok {
+		for _, v := range strings.Split(val, ",") {
+			disabledHour, err := strconv.Atoi(v)
+			if err != nil {
+				log.Fatalln(err)
+			}
+			disabledHours = append(disabledHours, disabledHour)
+		}
+	}
 }
 
 func say(h int, m int) {
@@ -42,6 +67,8 @@ func onReady() {
 	systray.SetTooltip("Time Alert")
 
 	go func() {
+		systray.AddMenuItem(time.Now().Format("2006-01-02 15:04:05"), "").Disable()
+		systray.AddMenuItem("时间触发点："+strconv.Itoa(alertTimePoint), "").Disable()
 		autoStartMenu := systray.AddMenuItem("开机自动启动", "Auto Start")
 		if _, err := os.Stat(link); !os.IsNotExist(err) {
 			autoStartMenu.Check()
@@ -72,27 +99,6 @@ func onReady() {
 }
 
 func main() {
-	var err error
-	conf := getConf()
-
-	alertTimePoint := 30
-	if val, ok := conf["alert_time_point"]; ok {
-		alertTimePoint, err = strconv.Atoi(val)
-		if err != nil {
-			log.Fatalln(err)
-		}
-	}
-	disabledHours := make([]int, 0)
-	if val, ok := conf["disabled_hours"]; ok {
-		for _, v := range strings.Split(val, ",") {
-			disabledHour, err := strconv.Atoi(v)
-			if err != nil {
-				log.Fatalln(err)
-			}
-			disabledHours = append(disabledHours, disabledHour)
-		}
-	}
-
 	go func() {
 		ticker := time.NewTicker(1 * time.Second)
 		currentMinute := time.Now().Minute()
