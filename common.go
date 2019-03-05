@@ -128,6 +128,7 @@ func createShortcut(source string, target string) error {
 	return nil
 }
 
+// 创建快捷方式
 func makeShortcut() {
 	err := createShortcut(app, link)
 	if err != nil {
@@ -135,11 +136,18 @@ func makeShortcut() {
 	}
 }
 
+// 删除快捷方式
 func removeShortcut() {
 	err := os.Remove(link)
 	if err != nil {
 		log.Fatalln(err)
 	}
+}
+
+// 更新快捷方式
+func updateShortcut() {
+	removeShortcut()
+	makeShortcut()
 }
 
 // 设置log的相关属性

@@ -43,9 +43,9 @@ func onReady() {
 
 	go func() {
 		autoStartMenu := systray.AddMenuItem("开机自动启动", "Auto Start")
-		// 如果快捷方式文件存在，则开启开机自动启动
 		if _, err := os.Stat(link); !os.IsNotExist(err) {
 			autoStartMenu.Check()
+			updateShortcut() // 把快捷方式指向当前可执行文件的路径，防止因移动文件而产生错误
 		}
 		aboutMenu := systray.AddMenuItem("关于", "About")
 		systray.AddSeparator()
