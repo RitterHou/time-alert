@@ -5,6 +5,7 @@ import (
 	"github.com/skratchdot/open-golang/open"
 	"log"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -67,13 +68,13 @@ func onReady() {
 	systray.SetTooltip("Time Alert")
 
 	go func() {
-		systray.AddMenuItem(time.Now().Format("2006-01-02 15:04:05"), "").Disable()
 		systray.AddMenuItem("时间触发点："+strconv.Itoa(alertTimePoint), "").Disable()
 		autoStartMenu := systray.AddMenuItem("开机自动启动", "Auto Start")
 		if _, err := os.Stat(link); !os.IsNotExist(err) {
 			autoStartMenu.Check()
 			updateShortcut() // 把快捷方式指向当前可执行文件的路径，防止因移动文件而产生错误
 		}
+		settingsMenu := systray.AddMenuItem("编辑配置文件", "Settings")
 		aboutMenu := systray.AddMenuItem("关于", "About")
 		systray.AddSeparator()
 		quitMenu := systray.AddMenuItem("退出", "Quit Time Alert")
@@ -88,8 +89,16 @@ func onReady() {
 					autoStartMenu.Check()
 					makeShortcut()
 				}
+			case <-settingsMenu.ClickedCh:
+				err := open.Run(path.Join(rootDir, fileName))
+				if err != nil {
+					log.Fatal(err)
+				}
 			case <-aboutMenu.ClickedCh:
-				open.Run("https://github.com/RitterHou/time-alert")
+				err := open.Run("https://github.com/RitterHou/time-alert")
+				if err != nil {
+					log.Fatal(err)
+				}
 			case <-quitMenu.ClickedCh:
 				systray.Quit()
 				return

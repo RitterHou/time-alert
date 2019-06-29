@@ -24,8 +24,9 @@ var (
 	minute  []byte
 	numbers = make([][]byte, 11)
 
-	app  string
-	link string
+	app     string
+	link    string
+	rootDir = ""
 )
 
 func init() {
@@ -61,6 +62,14 @@ func init() {
 	}
 	// 快捷方式的路径
 	link = path.Join(userInfo.HomeDir, LinkSuffix)
+
+	rootDir = path.Join(userInfo.HomeDir, ".TimeAlert")
+	if _, err := os.Stat(rootDir); os.IsNotExist(err) {
+		err = os.Mkdir(rootDir, os.ModeDir)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
 }
 
 // 把数字格式化为对应的声音
@@ -82,12 +91,17 @@ func format(num int) [][]byte {
 
 // 播放声音
 func play(data []byte) {
+	var err error
+
 	s, format, err := wav.Decode(ioutil.NopCloser(bytes.NewReader(data)))
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
+	err = speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
+	if err != nil {
+		log.Fatalln(err)
+	}
 	playing := make(chan struct{})
 	speaker.Play(beep.Seq(s, beep.Callback(func() {
 		close(playing)
@@ -107,7 +121,11 @@ func contains(s []int, e int) bool {
 
 // 创建快捷方式
 func createShortcut(source string, target string) error {
-	ole.CoInitializeEx(0, ole.COINIT_APARTMENTTHREADED|ole.COINIT_SPEED_OVER_MEMORY)
+	var err error
+	err = ole.CoInitializeEx(0, ole.COINIT_APARTMENTTHREADED|ole.COINIT_SPEED_OVER_MEMORY)
+	if err != nil {
+		return err
+	}
 	oleShellObject, err := oleutil.CreateObject("WScript.Shell")
 	if err != nil {
 		return err
@@ -123,8 +141,14 @@ func createShortcut(source string, target string) error {
 		return err
 	}
 	iDispatch := cs.ToIDispatch()
-	oleutil.PutProperty(iDispatch, "TargetPath", source)
-	oleutil.CallMethod(iDispatch, "Save")
+	_, err = oleutil.PutProperty(iDispatch, "TargetPath", source)
+	if err != nil {
+		return err
+	}
+	_, err = oleutil.CallMethod(iDispatch, "Save")
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -152,7 +176,7 @@ func updateShortcut() {
 
 // 设置log的相关属性
 func initLog() {
-	logFile, _ := os.OpenFile(path.Join(root, "TimeAlert.log"), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	logFile, _ := os.OpenFile(path.Join(rootDir, "TimeAlert.log"), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	log.SetOutput(logFile)
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 }
