@@ -53,7 +53,7 @@ func updateConf(confFile string) {
 	if val, ok := conf["alert_time_point"]; ok {
 		alertTimePoint, err = strconv.Atoi(val)
 		if err != nil {
-			log.Fatalln(err)
+			log.Println(err)
 		}
 	}
 	disabledHours = make([]int, 0)
@@ -61,7 +61,7 @@ func updateConf(confFile string) {
 		for _, v := range strings.Split(val, ",") {
 			disabledHour, err := strconv.Atoi(v)
 			if err != nil {
-				log.Fatalln(err)
+				log.Println(err)
 			}
 			disabledHours = append(disabledHours, disabledHour)
 		}
@@ -71,6 +71,10 @@ func updateConf(confFile string) {
 func say(h int, m int) {
 	go func() {
 		play(current)
+
+		if h > 12 { // 12小时制
+			h = h - 12
+		}
 
 		for _, b := range format(h) {
 			play(b)
