@@ -4,7 +4,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"path"
 	"regexp"
 	"strings"
 )
@@ -25,8 +24,7 @@ alert_time_point=30
 `
 )
 
-func init() {
-	confFile := path.Join(rootDir, fileName)
+func getConf(confFile string) map[string]string {
 	if _, err := os.Stat(confFile); os.IsNotExist(err) {
 		writeFile(confFile, strings.Replace(content, "\n", "\r\n", -1))
 	}
@@ -42,9 +40,6 @@ func init() {
 			conf[value[0]] = value[1]
 		}
 	}
-}
-
-func getConf() map[string]string {
 	return conf
 }
 

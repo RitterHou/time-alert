@@ -14,13 +14,42 @@ import (
 var (
 	alertTimePoint int
 	disabledHours  []int
+	timePoint      *systray.MenuItem
 )
 
 func init() {
 	initLog() // 初始化日志设置
 
+	log.Printf("TimeAlert starting %s\r\n", time.Now().Format("2006-01-02 15:04:05"))
+
+	confFile := path.Join(rootDir, fileName)
+	updateConf(confFile)
+
+	confStat, err := os.Stat(confFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+	go func() {
+		ticket := time.NewTicker(1 * time.Second)
+		for range ticket.C {
+			stat, err := os.Stat(confFile)
+			if err != nil {
+				log.Fatal(err)
+			}
+			if stat.Size() != confStat.Size() || stat.ModTime() != confStat.ModTime() {
+				log.Printf("Update conf %v\r\n", stat)
+				updateConf(confFile) // 文件发生变化则更新配置
+				timePoint.SetTitle("时间触发点：" + strconv.Itoa(alertTimePoint))
+				confStat = stat
+			}
+			time.Sleep(1 * time.Second)
+		}
+	}()
+}
+
+func updateConf(confFile string) {
 	var err error
-	conf := getConf()
+	conf := getConf(confFile)
 	alertTimePoint = 30
 	if val, ok := conf["alert_time_point"]; ok {
 		alertTimePoint, err = strconv.Atoi(val)
@@ -68,7 +97,9 @@ func onReady() {
 	systray.SetTooltip("Time Alert")
 
 	go func() {
-		systray.AddMenuItem("时间触发点："+strconv.Itoa(alertTimePoint), "").Disable()
+		timePoint = systray.AddMenuItem("时间触发点："+strconv.Itoa(alertTimePoint), "")
+		timePoint.Disable()
+
 		autoStartMenu := systray.AddMenuItem("开机自动启动", "Auto Start")
 		if _, err := os.Stat(link); !os.IsNotExist(err) {
 			autoStartMenu.Check()
