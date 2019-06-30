@@ -17,12 +17,13 @@ import (
 )
 
 var (
-	icon    []byte
-	current []byte
-	clock   []byte
-	hour    []byte
-	minute  []byte
-	numbers = make([][]byte, 11)
+	icon      []byte
+	blackIcon []byte
+	current   []byte
+	clock     []byte
+	hour      []byte
+	minute    []byte
+	numbers   = make([][]byte, 11)
 
 	app     string
 	link    string
@@ -40,6 +41,7 @@ func init() {
 	}
 
 	icon = base64ToByteArray(Icon)
+	blackIcon = base64ToByteArray(BlackIcon)
 	current = base64ToByteArray(CurrentBase64)
 	clock = base64ToByteArray(Clock)
 	hour = base64ToByteArray(HourBase64)
@@ -183,4 +185,37 @@ func initLog() {
 
 	os.Stdout = logFile
 	os.Stderr = logFile
+}
+
+// 检查激活状态
+func checkActive() bool {
+	inactiveFile := path.Join(rootDir, ".inactive")
+	if _, err := os.Stat(inactiveFile); os.IsNotExist(err) {
+		// 不存在，则激活
+		return true
+	} else {
+		return false
+	}
+}
+
+// 设置为未激活
+func setInactive() {
+	inactiveFile := path.Join(rootDir, ".inactive")
+	f, err := os.OpenFile(inactiveFile, os.O_CREATE, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = f.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+// 设置为激活
+func setActive() {
+	inactiveFile := path.Join(rootDir, ".inactive")
+	err := os.Remove(inactiveFile)
+	if err != nil {
+		log.Fatal(err)
+	}
 }

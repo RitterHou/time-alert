@@ -15,6 +15,7 @@ var (
 	alertTimePoint int
 	disabledHours  []int
 	timePoint      *systray.MenuItem
+	activeAlert    bool
 )
 
 func init() {
@@ -44,6 +45,8 @@ func init() {
 			}
 		}
 	}()
+
+	activeAlert = checkActive()
 }
 
 func updateConf(confFile string) {
@@ -69,6 +72,9 @@ func updateConf(confFile string) {
 }
 
 func say(h int, m int) {
+	if !activeAlert {
+		return
+	}
 	go func() {
 		play(current)
 
@@ -96,14 +102,21 @@ func say(h int, m int) {
 }
 
 func onReady() {
-	systray.SetIcon(icon)
-	systray.SetTooltip("Time Alert")
-
 	go func() {
+		timeAlert := systray.AddMenuItem("启用 TimeAlert", "")
+		if activeAlert {
+			systray.SetIcon(icon)
+			systray.SetTooltip("Time Alert 已启用")
+			timeAlert.Check()
+		} else {
+			systray.SetIcon(blackIcon)
+			systray.SetTooltip("Time Alert 未启用")
+		}
+
 		timePoint = systray.AddMenuItem("时间触发点："+strconv.Itoa(alertTimePoint), "")
 		timePoint.Disable()
 
-		autoStartMenu := systray.AddMenuItem("开机自动启动", "Auto Start")
+		autoStartMenu := systray.AddMenuItem("开机启动", "Auto Start")
 		if _, err := os.Stat(link); !os.IsNotExist(err) {
 			autoStartMenu.Check()
 			updateShortcut() // 把快捷方式指向当前可执行文件的路径，防止因移动文件而产生错误
@@ -116,6 +129,20 @@ func onReady() {
 
 		for {
 			select {
+			case <-timeAlert.ClickedCh:
+				if timeAlert.Checked() {
+					timeAlert.Uncheck()
+					activeAlert = false
+					setInactive()
+					systray.SetIcon(blackIcon)
+					systray.SetTooltip("Time Alert 未启用")
+				} else {
+					timeAlert.Check()
+					activeAlert = true
+					setActive()
+					systray.SetIcon(icon)
+					systray.SetTooltip("Time Alert 已启用")
+				}
 			case <-autoStartMenu.ClickedCh:
 				if autoStartMenu.Checked() {
 					autoStartMenu.Uncheck()
