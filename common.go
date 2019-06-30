@@ -27,6 +27,7 @@ var (
 	app     string
 	link    string
 	rootDir = ""
+	logName = "TimeAlert.log"
 )
 
 func init() {
@@ -176,7 +177,7 @@ func updateShortcut() {
 
 // 设置log的相关属性
 func initLog() {
-	logFile, _ := os.OpenFile(path.Join(rootDir, "TimeAlert.log"), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	logFile, _ := os.OpenFile(path.Join(rootDir, logName), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	log.SetOutput(logFile)
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 

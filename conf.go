@@ -19,8 +19,6 @@ const (
 alert_time_point=30
 ; disable alert on this hours
 ; disabled_hours=22,23
-
-; Please restart application after changing settings.
 `
 )
 
@@ -37,7 +35,7 @@ func getConf(confFile string) map[string]string {
 	for _, line := range strings.Split(confContent, "\n") {
 		if strings.Contains(line, "=") {
 			value := strings.Split(line, "=")
-			conf[value[0]] = value[1]
+			conf[strings.Trim(value[0], " ")] = strings.Trim(value[1], " ")
 		}
 	}
 	return conf

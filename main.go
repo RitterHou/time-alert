@@ -42,7 +42,6 @@ func init() {
 				timePoint.SetTitle("时间触发点：" + strconv.Itoa(alertTimePoint))
 				confStat = stat
 			}
-			time.Sleep(1 * time.Second)
 		}
 	}()
 }
@@ -105,8 +104,9 @@ func onReady() {
 			autoStartMenu.Check()
 			updateShortcut() // 把快捷方式指向当前可执行文件的路径，防止因移动文件而产生错误
 		}
-		settingsMenu := systray.AddMenuItem("编辑配置文件", "Settings")
-		aboutMenu := systray.AddMenuItem("关于", "About")
+		settingsMenu := systray.AddMenuItem("编辑本地 Settings 文件", "Settings")
+		logMenu := systray.AddMenuItem("显示日志...", "log")
+		aboutMenu := systray.AddMenuItem("关于...", "About")
 		systray.AddSeparator()
 		quitMenu := systray.AddMenuItem("退出", "Quit Time Alert")
 
@@ -119,6 +119,11 @@ func onReady() {
 				} else {
 					autoStartMenu.Check()
 					makeShortcut()
+				}
+			case <-logMenu.ClickedCh:
+				err := open.Run(path.Join(rootDir, logName))
+				if err != nil {
+					log.Fatal(err)
 				}
 			case <-settingsMenu.ClickedCh:
 				err := open.Run(path.Join(rootDir, fileName))
