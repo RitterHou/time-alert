@@ -129,6 +129,7 @@ func createShortcut(source string, target string) error {
 	if err != nil {
 		return err
 	}
+	defer ole.CoUninitialize()
 	oleShellObject, err := oleutil.CreateObject("WScript.Shell")
 	if err != nil {
 		return err
